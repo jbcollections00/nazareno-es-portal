@@ -19,40 +19,43 @@ export default function GalleryViewer({
       ? media[selectedIndex]
       : null;
 
-  function openMedia(index) {
+  const openMedia = (index) => {
     setSelectedIndex(index);
-  }
+  };
 
-  function closeMedia() {
+  const closeMedia = () => {
     setSelectedIndex(null);
-  }
+  };
 
-  function previousMedia() {
+  const previousMedia = () => {
     setSelectedIndex((prev) =>
       prev === 0
         ? media.length - 1
         : prev - 1
     );
-  }
+  };
 
-  function nextMedia() {
+  const nextMedia = () => {
     setSelectedIndex((prev) =>
       prev === media.length - 1
         ? 0
         : prev + 1
     );
-  }
+  };
 
-  function fullscreenVideo(id) {
+  const fullscreenVideo = () => {
     const video =
-      document.getElementById(id);
+      document.getElementById(
+        "gallery-video"
+      );
 
     if (
-      video?.requestFullscreen
+      video &&
+      video.requestFullscreen
     ) {
       video.requestFullscreen();
     }
-  }
+  };
 
   return (
     <>
@@ -60,19 +63,20 @@ export default function GalleryViewer({
         {media.map((item, index) => (
           <div
             key={item.id}
-            className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer"
             onClick={() =>
               openMedia(index)
             }
+            className="bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer"
           >
             {item.file_type ===
             "video" ? (
               <video
                 preload="metadata"
-                className="w-full h-64 object-cover"
+                className="w-full aspect-square object-cover bg-black"
               >
                 <source
                   src={item.file_url}
+                  type="video/mp4"
                 />
               </video>
             ) : (
@@ -80,7 +84,7 @@ export default function GalleryViewer({
                 src={item.file_url}
                 alt="Gallery Media"
                 loading="lazy"
-                className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                className="w-full aspect-square object-cover hover:scale-105 transition-transform duration-300"
               />
             )}
           </div>
@@ -91,24 +95,28 @@ export default function GalleryViewer({
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
           <button
             onClick={closeMedia}
-            className="absolute top-5 right-5 text-white text-3xl"
+            className="absolute top-5 right-5 text-white text-3xl z-50"
           >
             <FaTimes />
           </button>
 
-          <button
-            onClick={previousMedia}
-            className="absolute left-5 text-white text-3xl"
-          >
-            <FaChevronLeft />
-          </button>
+          {media.length > 1 && (
+            <>
+              <button
+                onClick={previousMedia}
+                className="absolute left-5 text-white text-3xl z-50"
+              >
+                <FaChevronLeft />
+              </button>
 
-          <button
-            onClick={nextMedia}
-            className="absolute right-5 text-white text-3xl"
-          >
-            <FaChevronRight />
-          </button>
+              <button
+                onClick={nextMedia}
+                className="absolute right-5 text-white text-3xl z-50"
+              >
+                <FaChevronRight />
+              </button>
+            </>
+          )}
 
           {selectedMedia.file_type ===
           "video" ? (
@@ -123,14 +131,15 @@ export default function GalleryViewer({
                   src={
                     selectedMedia.file_url
                   }
+                  type="video/mp4"
                 />
+                Your browser does not
+                support the video tag.
               </video>
 
               <button
-                onClick={() =>
-                  fullscreenVideo(
-                    "gallery-video"
-                  )
+                onClick={
+                  fullscreenVideo
                 }
                 className="absolute top-4 right-4 bg-black/70 text-white p-3 rounded-full"
               >
@@ -143,7 +152,6 @@ export default function GalleryViewer({
                 selectedMedia.file_url
               }
               alt="Gallery Media"
-              loading="lazy"
               className="max-w-full max-h-[85vh] rounded-xl"
             />
           )}
