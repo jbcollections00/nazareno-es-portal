@@ -1,6 +1,34 @@
 import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+
+  const { data: article } = await supabase
+    .from("news")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (!article) {
+    return {
+      title: "News",
+    };
+  }
+
+  return {
+    title: article.title,
+    description: article.content?.slice(0, 160),
+    openGraph: {
+      title: article.title,
+      description: article.content?.slice(0, 160),
+      url: `https://nazareno-es-portal.vercel.app/news/${id}`,
+      images: article.image ? [{ url: article.image }] : [],
+      type: "article",
+    },
+  };
+}
+
 export default async function NewsArticlePage({ params }) {
   const { id } = await params;
 
@@ -15,7 +43,8 @@ export default async function NewsArticlePage({ params }) {
   }
 
   const paragraphs = (article.content || "")
-    .split("\n")
+    .split("
+")
     .filter((p) => p.trim() !== "");
 
   return (
@@ -23,11 +52,7 @@ export default async function NewsArticlePage({ params }) {
       <div className="max-w-5xl mx-auto px-6">
         <article className="bg-white rounded-3xl shadow-lg overflow-hidden">
           {article.image && (
-            <img
-              src={article.image}
-              alt={article.title}
-              className="w-full h-[400px] object-cover"
-            />
+            <img src={article.image} alt={article.title} className="w-full h-[400px] object-cover" />
           )}
 
           <div className="p-10 md:p-16">
