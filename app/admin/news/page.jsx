@@ -1,5 +1,5 @@
-"use client";
 
+"use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -7,13 +7,11 @@ export default function NewsAdminPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
-
   const [news, setNews] = useState([]);
-
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
-
+  const [editImage, setEditImage] = useState(null);
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -32,7 +30,6 @@ export default function NewsAdminPage() {
 
   async function addNews(e) {
     e.preventDefault();
-
     setSaving(true);
 
     let imageUrl = "";
@@ -87,12 +84,42 @@ export default function NewsAdminPage() {
   }
 
   async function updateNews(id) {
+    let imageUrl;
+
+    if (editImage) {
+      const fileName = `${Date.now()}-${editImage.name}`;
+
+      const { error: uploadError } =
+        await supabase.storage
+          .from("news")
+          .upload(fileName, editImage);
+
+      if (uploadError) {
+        alert(uploadError.message);
+        return;
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage
+        .from("news")
+        .getPublicUrl(fileName);
+
+      imageUrl = publicUrl;
+    }
+
+    const updateData = {
+      title: editTitle,
+      content: editContent,
+    };
+
+    if (imageUrl) {
+      updateData.image = imageUrl;
+    }
+
     const { error } = await supabase
       .from("news")
-      .update({
-        title: editTitle,
-        content: editContent,
-      })
+      .update(updateData)
       .eq("id", id);
 
     if (error) {
@@ -101,6 +128,7 @@ export default function NewsAdminPage() {
     }
 
     setEditingId(null);
+    setEditImage(null);
 
     loadNews();
 
@@ -262,6 +290,35 @@ export default function NewsAdminPage() {
                         className="border p-3 rounded-lg w-full h-32"
                       />
 
+                      {item.image && (
+                        <img
+                          src={item.image}
+                          alt="Current"
+                          className="w-56 h-40 object-cover rounded-lg border"
+                        />
+                      )}
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          setEditImage(
+                            e.target.files?.[0] ||
+                              null
+                          )
+                        }
+                      />
+
+                      {editImage && (
+                        <img
+                          src={URL.createObjectURL(
+                            editImage
+                          )}
+                          alt="Preview"
+                          className="w-56 h-40 object-cover rounded-lg border"
+                        />
+                      )}
+
                       <button
                         onClick={() =>
                           updateNews(item.id)
@@ -301,6 +358,7 @@ export default function NewsAdminPage() {
                     setEditContent(
                       item.content
                     );
+                    setEditImage(null);
                   }}
                   className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
                 >
