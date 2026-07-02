@@ -43,8 +43,7 @@ export default async function NewsArticlePage({ params }) {
   }
 
   const paragraphs = (article.content || "")
-    .split("
-")
+    .split("\n")
     .filter((p) => p.trim() !== "");
 
   return (
