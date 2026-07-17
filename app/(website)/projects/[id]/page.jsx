@@ -123,7 +123,7 @@ export default function ProjectDetailsPage() {
             </div>
           </div>
 
-          {/* Target Goal Content Block */}
+          {/* Target Goal Milestone Content Block */}
           {project.target && (
             <div className="bg-blue-50/40 border border-blue-100/50 rounded-2xl p-6 space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600">Target Goal Milestone</h3>
@@ -169,6 +169,26 @@ export default function ProjectDetailsPage() {
               </div>
             </div>
           )}
+
+          {/* Fully Dynamic Redirect CTA Button Area */}
+          <div className="pt-8 mt-6 border-t border-slate-100 text-center">
+            <h4 className="text-slate-900 font-extrabold text-lg md:text-xl mb-2">
+              Ready to support {project.title}?
+            </h4>
+            <p className="text-slate-500 text-sm md:text-base mb-6 max-w-lg mx-auto leading-relaxed">
+              {project.target 
+                ? `Help us achieve our milestone: "${project.target}". Contact us to volunteer, donate, or partner today.`
+                : "Every hand counts! Join us in turning this school vision into a reality. Explore our support opportunities today."
+              }
+            </p>
+            <Link 
+              href={`/contact?project=${encodeURIComponent(project.title)}`}
+              className="inline-flex items-center justify-center gap-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-2xl shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/30 active:scale-95 text-sm md:text-base tracking-wide"
+            >
+              <FaHandHoldingHeart className="text-lg text-white" />
+              <span className="text-white">Join this Project</span>
+            </Link>
+          </div>
           
         </div>
       </div>

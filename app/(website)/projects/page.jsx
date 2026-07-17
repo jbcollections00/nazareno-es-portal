@@ -19,10 +19,13 @@ export default function IntoTheFuturePage() {
   useEffect(() => {
     async function fetchLiveProjects() {
       setLoading(true);
+      
+      // Sinasala lamang ang mga may section_type na "future" at hindi isinasama ang real at hope
       const { data, error } = await supabase
         .from("projects")
         .select("*")
-        .order("id", { ascending: false });
+        .eq("section_type", "future")
+        .order("sort_order", { ascending: true });
 
       if (!error && data) {
         setProjects(data);
@@ -45,13 +48,13 @@ export default function IntoTheFuturePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-12">
-      {/* Page Header */}
+    <div className="max-w-7xl mx-auto px-4 py-12">
+      {/* Page Header - Completed Title Version */}
       <div className="text-center mb-12">
-        <h1 className="text-5xl font-extrabold text-blue-900 mb-4">
-          Into the Future
+        <h1 className="text-4xl md:text-5xl font-extrabold text-blue-900 mb-4">
+          Into the Future: School Improvement Plan 2026-2028
         </h1>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+        <p className="text-base md:text-lg text-gray-600 max-w-3xl mx-auto">
           Explore upcoming projects designed to uplift Nazareno Elementary School. Together with our community, we can turn these visions into reality for our learners.
         </p>
       </div>
@@ -66,15 +69,16 @@ export default function IntoTheFuturePage() {
           No current projects listed right now. Check back soon!
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        /* In-update sa 4-columns para swak sa buong design architecture ng app ninyo */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {projects.map((project) => (
             <div 
               key={project.id} 
               onClick={() => router.push(`/projects/${project.id}`)}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col justify-between overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group h-full"
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group h-full"
             >
               {/* Image Illustration Display Header Container */}
-              <div className="relative h-48 w-full bg-slate-100 overflow-hidden shrink-0">
+              <div className="relative h-40 w-full bg-slate-100 overflow-hidden shrink-0">
                 {project.image_url ? (
                   <img 
                     src={project.image_url} 
@@ -89,7 +93,7 @@ export default function IntoTheFuturePage() {
                 )}
 
                 {/* Absolute Status Badge Indicator Overlay */}
-                <span className={`absolute top-4 right-4 px-3 py-1 text-xs font-bold rounded-full shadow-sm flex items-center gap-1.5 ${
+                <span className={`absolute top-3 right-3 px-2.5 py-1 text-[10px] font-bold rounded-full shadow-sm flex items-center gap-1 ${
                   project.status === "Completed" ? "bg-green-100 text-green-700" :
                   project.status === "In Progress" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
                 }`}>
@@ -101,32 +105,32 @@ export default function IntoTheFuturePage() {
               </div>
 
               {/* Main Information Block Area */}
-              <div className="p-6 flex-grow flex flex-col justify-between">
+              <div className="p-4 flex-grow flex flex-col justify-between">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
+                  <h3 className="text-base font-bold text-gray-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
                     {project.title}
                   </h3>
 
-                  <p className="text-gray-600 text-sm mb-6 line-clamp-3">
+                  <p className="text-gray-600 text-xs mb-4 line-clamp-3">
                     {project.description}
                   </p>
                 </div>
 
                 <div>
                   {/* Progress Bar Container */}
-                  <div className="mb-6">
-                    <div className="flex justify-between text-xs font-semibold text-gray-500 mb-1">
+                  <div className="mb-4">
+                    <div className="flex justify-between text-[10px] font-semibold text-gray-500 mb-1">
                       <span>Progress to Target</span>
                       <span>{project.progress}%</span>
                     </div>
-                    <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
                       <div 
                         className="bg-blue-600 h-full rounded-full transition-all duration-500" 
                         style={{ width: `${project.progress}%` }}
                       />
                     </div>
                     {project.target && (
-                      <p className="text-xs text-gray-500 mt-2 line-clamp-1">
+                      <p className="text-[10px] text-gray-500 mt-2 line-clamp-1">
                         <strong>Goal:</strong> {project.target}
                       </p>
                     )}
@@ -134,11 +138,11 @@ export default function IntoTheFuturePage() {
 
                   {/* Specific items needed section */}
                   {project.needed_support && project.needed_support.length > 0 && (
-                    <div className="border-t pt-4">
-                      <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wide mb-2">
+                    <div className="border-t pt-3">
+                      <h4 className="text-[10px] font-bold text-blue-900 uppercase tracking-wide mb-1.5">
                         How you can help:
                       </h4>
-                      <ul className="text-xs text-gray-600 space-y-1.5 list-disc list-inside">
+                      <ul className="text-[10px] text-gray-600 space-y-1 list-disc list-inside">
                         {project.needed_support.slice(0, 2).map((item, idx) => (
                           <li key={idx} className="line-clamp-1">{item}</li>
                         ))}
@@ -149,7 +153,7 @@ export default function IntoTheFuturePage() {
               </div>
 
               {/* Action Button Footer */}
-              <div className="p-6 bg-gray-50/75 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400 shrink-0">
+              <div className="p-4 bg-gray-50/75 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400 shrink-0">
                 <span className="flex items-center gap-1">
                   <FaCalendarAlt />
                   {formatDate(project.date_posted)}

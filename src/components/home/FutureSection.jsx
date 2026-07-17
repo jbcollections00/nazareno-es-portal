@@ -15,12 +15,13 @@ export default function FutureSection() {
     async function fetchFeaturedProjects() {
       setLoading(true);
       
+      // Kumukuha ng eksaktong 4 na cards lamang para sa grid layout ng Home page
       const { data, error } = await supabase
         .from("projects")
         .select("*")
         .eq("section_type", "future") 
-        .order("sort_order", { ascending: true }) 
-        .limit(3); // Populates the new 3-card grid layout
+        .order("sort_order", { ascending: true })
+        .limit(4);
 
       if (!error && data) {
         setFeaturedProjects(data);
@@ -68,8 +69,8 @@ export default function FutureSection() {
             No active development plans posted right now.
           </div>
         ) : (
-          /* Three Card Layout Grid Configuration */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          /* Apat na Card Grid Configuration */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProjects.map((project) => (
               <div
                 key={project.id}
@@ -77,7 +78,7 @@ export default function FutureSection() {
                 className="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 group h-full"
               >
                 {/* Project Image Header Display Container */}
-                <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
+                <div className="relative h-40 w-full bg-slate-100 overflow-hidden">
                   {project.image_url ? (
                     <img 
                       src={project.image_url} 
@@ -92,7 +93,7 @@ export default function FutureSection() {
                   )}
 
                   {/* Absolute Badge Status Indicator overlayed on graphic */}
-                  <span className={`absolute top-4 right-4 px-3 py-1 text-xs font-bold rounded-full shadow-sm flex items-center gap-1.5 ${
+                  <span className={`absolute top-3 right-3 px-2.5 py-1 text-[10px] font-bold rounded-full shadow-sm flex items-center gap-1 ${
                     project.status === "Completed" ? "bg-green-100 text-green-700" :
                     project.status === "In Progress" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
                   }`}>
@@ -103,23 +104,23 @@ export default function FutureSection() {
                   </span>
                 </div>
 
-                <div className="p-6 flex flex-col flex-grow justify-between">
+                <div className="p-4 flex flex-col flex-grow justify-between">
                   <div className="mb-4">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    <h3 className="text-base font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                       {project.title}
                     </h3>
-                    <p className="text-slate-600 text-sm line-clamp-3">
+                    <p className="text-slate-600 text-xs line-clamp-3">
                       {project.description}
                     </p>
                   </div>
 
                   {/* Simple progress preview */}
-                  <div className="mt-auto pt-4 border-t border-slate-50">
-                    <div className="flex justify-between text-xs font-semibold text-slate-500 mb-1">
+                  <div className="mt-auto pt-2 border-t border-slate-100">
+                    <div className="flex justify-between text-[10px] font-semibold text-slate-500 mb-1">
                       <span>Support Progress</span>
                       <span>{project.progress}%</span>
                     </div>
-                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                       <div
                         className="bg-blue-600 h-full rounded-full transition-all duration-300"
                         style={{ width: `${project.progress}%` }}

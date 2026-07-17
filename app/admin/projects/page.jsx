@@ -6,7 +6,7 @@ import { FaPlus, FaTrash, FaPencilAlt, FaRocket, FaSpinner, FaCloudUploadAlt, Fa
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState([]);
-  const [galleryAlbums, setGalleryAlbums] = useState([]); // Dynamic list of gallery folders
+  const [galleryAlbums, setGalleryAlbums] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -19,7 +19,7 @@ export default function AdminProjectsPage() {
   const [progress, setProgress] = useState(0);
   const [supportInput, setSupportInput] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [documentationLink, setDocumentationLink] = useState(""); // Tracks selected album path
+  const [documentationLink, setDocumentationLink] = useState(""); 
   const [uploadingImage, setUploadingImage] = useState(false);
   
   // Custom Section & Order States
@@ -28,7 +28,7 @@ export default function AdminProjectsPage() {
 
   useEffect(() => {
     fetchProjects();
-    fetchGalleryAlbums(); // Pull school gallery albums automatically on mount
+    fetchGalleryAlbums(); 
   }, []);
 
   async function fetchProjects() {
@@ -43,10 +43,8 @@ export default function AdminProjectsPage() {
     setLoading(false);
   }
 
-  // AUTOMATIC GALLERY FETCH LOGIC
   async function fetchGalleryAlbums() {
     try {
-      // Looks for a table named 'galleries' or 'albums'
       const { data, error } = await supabase
         .from("galleries")
         .select("id, title")
@@ -55,7 +53,6 @@ export default function AdminProjectsPage() {
       if (!error && data) {
         setGalleryAlbums(data);
       } else {
-        // Fallback option in case table is singular or named 'albums'
         const { data: fallbackData } = await supabase
           .from("albums")
           .select("id, title")
@@ -89,7 +86,7 @@ export default function AdminProjectsPage() {
 
       setImageUrl(publicUrl);
     } catch (error) {
-      alert("Error uploading image: " + error.message + "\n\nTip: Make sure you created a public storage bucket named 'project-images' in your Supabase Dashboard.");
+      alert("Error uploading image: " + error.message);
     } finally {
       setUploadingImage(false);
     }
@@ -109,7 +106,7 @@ export default function AdminProjectsPage() {
       section_type: sectionType,
       sort_order: parseInt(sortOrder) || 1,
       image_url: imageUrl,
-      documentation_link: documentationLink // Saves selected Album path to DB
+      documentation_link: documentationLink
     };
 
     let error;
@@ -146,7 +143,7 @@ export default function AdminProjectsPage() {
     setSectionType(project.section_type || "future");
     setSortOrder(project.sort_order || 1);
     setImageUrl(project.image_url || "");
-    setDocumentationLink(project.documentation_link || ""); // Load from saved column
+    setDocumentationLink(project.documentation_link || ""); 
     setIsModalOpen(true);
   }
 
@@ -266,7 +263,7 @@ export default function AdminProjectsPage() {
                 <input required type="text" className="w-full px-4 py-2.5 border rounded-xl bg-slate-50" value={title} onChange={e => setTitle(e.target.value)} />
               </div>
 
-              {/* REPLACED WITH DYNAMIC SELECT DROPDOWN */}
+              {/* DYNAMIC SELECT DROPDOWN FOR GALLERY */}
               <div>
                 <label className="block text-xs font-bold text-slate-600 uppercase mb-1 flex items-center gap-1">
                   <FaLink className="text-slate-500" /> Documentation / Album Gallery Link
@@ -278,15 +275,11 @@ export default function AdminProjectsPage() {
                 >
                   <option value="">-- Choose School Gallery Album --</option>
                   {galleryAlbums.map((album) => (
-                    // Constructs a structural routing endpoint based on the selected album ID
                     <option key={album.id} value={`/gallery/${album.id}`}>
                       📸 {album.title}
                     </option>
                   ))}
                 </select>
-                <span className="text-[10px] text-slate-400 mt-1 block">
-                  Select which active gallery folder represents the documentation of this project.
-                </span>
               </div>
 
               <div>
