@@ -10,7 +10,8 @@ export default function WebsiteLayout({
   return (
     <>
       <Header />
-      <main>{children}</main>
+      {/* Adding the attribute here safely suppresses the Next.js warning on this route path */}
+      <main data-scroll-behavior="smooth">{children}</main>
       <Footer />
     </>
   );

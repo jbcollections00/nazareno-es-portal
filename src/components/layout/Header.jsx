@@ -11,6 +11,7 @@ import {
   FaDownload,
   FaEnvelope,
   FaBars,
+  FaRocket,
 } from "react-icons/fa";
 
 const navigation = [
@@ -28,6 +29,11 @@ const navigation = [
     name: "News",
     href: "/news",
     icon: FaNewspaper,
+  },
+  {
+    name: "Into the Future",
+    href: "/projects",
+    icon: FaRocket,
   },
   {
     name: "Gallery",
@@ -52,8 +58,7 @@ const navigation = [
 ];
 
 export default function Header() {
-  const [mobileOpen, setMobileOpen] =
-    useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
@@ -61,26 +66,26 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           <Link
             href="/"
-            className="flex items-center gap-3 shrink-0"
+            className="flex items-center gap-2 xl:gap-3 shrink-0"
           >
             <img
               src="/logo.png"
               alt="Logo"
-              className="w-12 h-12 object-contain"
+              className="w-10 h-10 lg:w-12 lg:h-12 object-contain"
             />
 
             <div>
-              <h1 className="text-lg lg:text-2xl font-bold text-slate-900 whitespace-nowrap">
+              <h1 className="text-base xl:text-2xl font-bold text-slate-900 whitespace-nowrap">
                 Nazareno Elementary School
               </h1>
-
-              <p className="text-sm text-slate-500">
+              <p className="text-xs text-slate-500">
                 Official School Portal
               </p>
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          {/* Desktop Navigation - Optimized gaps and font sizing */}
+          <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1">
             {navigation.map((item) => {
               const Icon = item.icon;
 
@@ -88,19 +93,17 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300"
+                  className="flex items-center gap-1.5 px-2 py-2 xl:px-3 rounded-xl font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-xs xl:text-sm whitespace-nowrap"
                 >
-                  <Icon className="text-sm" />
-                  {item.name}
+                  <Icon className="text-xs xl:text-sm shrink-0" />
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
           </nav>
 
           <button
-            onClick={() =>
-              setMobileOpen(!mobileOpen)
-            }
+            onClick={() => setMobileOpen(!mobileOpen)}
             className="lg:hidden text-2xl text-slate-700"
             aria-label="Toggle Menu"
           >
@@ -108,6 +111,7 @@ export default function Header() {
           </button>
         </div>
 
+        {/* Mobile Navigation */}
         <div
           className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${
             mobileOpen
@@ -123,9 +127,7 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={() =>
-                    setMobileOpen(false)
-                  }
+                  onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-700 hover:bg-blue-50 hover:text-blue-700 hover:translate-x-2 transition-all duration-300"
                 >
                   <Icon />
