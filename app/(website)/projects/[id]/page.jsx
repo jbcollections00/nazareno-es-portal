@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { FaArrowLeft, FaSpinner, FaCheckCircle, FaHourglassHalf, FaHandHoldingHeart } from "react-icons/fa";
+import { FaArrowLeft, FaSpinner, FaCheckCircle, FaHourglassHalf, FaHandHoldingHeart, FaImages } from "react-icons/fa";
 
 export default function ProjectDetailsPage() {
   const { id } = useParams();
@@ -138,6 +138,19 @@ export default function ProjectDetailsPage() {
               {project.description}
             </p>
           </div>
+
+          {/* CONDITIONAL SEE DOCUMENTATION BUTTON */}
+          {project.documentation_link && (
+            <div className="pt-2">
+              <Link 
+                href={project.documentation_link}
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3.5 rounded-2xl shadow-md transition-all hover:shadow-lg active:scale-95 text-sm md:text-base"
+              >
+                <FaImages className="text-lg" />
+                See Documentation
+              </Link>
+            </div>
+          )}
 
           {/* Itemized Checkbox Lists Elements For Operations */}
           {project.needed_support && project.needed_support.length > 0 && (

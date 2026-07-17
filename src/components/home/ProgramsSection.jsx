@@ -62,7 +62,7 @@ export default function ProgramsSection() {
                   Project REAL 3.0
                 </h2>
                 <p className="text-slate-600 text-sm md:text-base mb-8 leading-relaxed">
-                  Explore our strategic roadmap for cultivating reading fluency, academic interventions, and robust foundational development for all learners.
+                  As a banner <strong className="text-emerald-700 font-bold">core project of SDO Sorsogon</strong>, this initiative represents our strategic roadmap for cultivating reading fluency, academic interventions, and robust foundational development for all learners.
                 </p>
 
                 {/* Vertical Stacked Cards for REAL project items */}
@@ -134,7 +134,7 @@ export default function ProgramsSection() {
                   Journey of HOPE
                 </h2>
                 <p className="text-slate-600 text-sm md:text-base mb-8 leading-relaxed">
-                  Partner with us on community feeding setups, healthcare missions, value orientation tracking, and direct student wellness support ecosystems.
+                  Driven as a signature <strong className="text-rose-700 font-bold">core project of SDO Sorsogon</strong>, partner with us on community feeding setups, healthcare missions, value orientation tracking, and direct student wellness support ecosystems.
                 </p>
 
                 {/* Vertical Stacked Cards for HOPE project items */}
