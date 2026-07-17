@@ -1,13 +1,14 @@
 import { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
-import ProjectDetailsClient from "./ProjectDetailsClient"; // This will be your UI component
+import ProjectDetailsClient from "./ProjectDetailsClient";
 import Link from "next/link";
 
+// 1. Next.js 15+ requires params to be typed as a Promise
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-// 1. Centralized server-side data fetcher
+// 2. Fetcher updated to accept the already-resolved id string
 async function getProject(id: string) {
   const { data, error } = await supabase
     .from("projects")
@@ -19,17 +20,19 @@ async function getProject(id: string) {
   return data;
 }
 
-// 2. DYNAMIC OPEN GRAPH METADATA GENERATOR
+// 3. Updated Dynamic Metadata Generation
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const project = await getProject(params.id);
+  // CRITICAL: Await the dynamic params promise before reading its properties
+  const { id } = await params;
+  const project = await getProject(id);
 
   const title = project ? `${project.title} | Nazareno Elementary School` : "Project Not Found";
   const description = project ? project.description : "Official School Portal";
   
-  // NOTE: Meta requires full absolute URLs (starting with https://)
+  // Use the project's actual image, or fall back to an existing asset
   const imageUrl = project?.image_url 
     ? project.image_url 
-    : "https://nazareno-es-portal.vercel.app/default-logo.png"; 
+    : "https://nazareno-es-portal.vercel.app/images/logo.png"; // <-- Make sure this fallback URL is a valid image in your public folder!
 
   return {
     title,
@@ -37,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      url: `https://nazareno-es-portal.vercel.app/projects/${params.id}`,
+      url: `https://nazareno-es-portal.vercel.app/projects/${id}`,
       siteName: "Nazareno Elementary School Portal",
       images: [
         {
@@ -58,18 +61,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// 3. MAIN SERVER ROUTE CONTROLLER
+// 4. Updated Main Server Route Controller
 export default async function ProjectDetailsPage({ params }: Props) {
-  const project = await getProject(params.id);
+  // CRITICAL: Await the dynamic params promise here as well
+  const { id } = await params;
+  const project = await getProject(id);
 
-  // If the record isn't in your database, render the fallback immediately
   if (!project) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center py-20 px-4">
         <div className="bg-white p-8 rounded-3xl shadow-sm border text-center max-w-md">
           <span className="text-6xl block mb-4">🔍</span>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Project Not Found</h2>
-          <p className="text-slate-600 mb-6">The developmental record you are searching for could not be located or has changed position.</p>
+          <p className="text-slate-600 mb-6">The developmental record you are searching for could not be located.</p>
           <Link href="/" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition">
             Return Home
           </Link>
@@ -78,6 +82,5 @@ export default async function ProjectDetailsPage({ params }: Props) {
     );
   }
 
-  // Pass the pre-fetched project data directly into the Client layout
   return <ProjectDetailsClient project={project} />;
 }
