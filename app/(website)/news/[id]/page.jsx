@@ -18,11 +18,9 @@ export async function generateMetadata({ params }) {
 
   const siteDomain = "https://nazareno-es-portal.vercel.app";
   
-  // 1. Ensure the image path is a full, absolute URL. 
-  // If it's already a full Supabase HTTP link, use it. Otherwise, attach your domain.
   const imageUrl = article.image 
     ? (article.image.startsWith("http") ? article.image : `${siteDomain}${article.image}`)
-    : `${siteDomain}/default-logo.png`; // Fallback image if the article has no image
+    : `${siteDomain}/default-logo.png`;
 
   return {
     title: article.title,
@@ -33,7 +31,6 @@ export async function generateMetadata({ params }) {
       url: `${siteDomain}/news/${id}`,
       type: "article",
       siteName: "Nazareno Elementary School Portal",
-      // 2. Added explicit width, height, and alt tags for Facebook's crawler
       images: [
         {
           url: imageUrl,
@@ -41,6 +38,12 @@ export async function generateMetadata({ params }) {
           height: 630,
           alt: article.title,
         },
+        {
+          url: `${siteDomain}/default-logo.png`,
+          width: 1200,
+          height: 630,
+          alt: "Nazareno Elementary School",
+        }
       ],
     },
     twitter: {
