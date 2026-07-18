@@ -1,11 +1,58 @@
 import { supabase } from "@/lib/supabase";
 import GalleryViewer from "@/components/gallery/GalleryViewer";
+import { Metadata } from "next";
 
-export default async function AlbumPage({
-  params,
-}: {
+type Props = {
   params: Promise<{ id: string }>;
-}) {
+};
+
+// 1. Dynamic Metadata Generation for explicit OG tags
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+
+  // Fetch the specific album data for the metadata tags
+  const { data: album } = await supabase
+    .from("albums")
+    .select("title, description, cover_photo")
+    .eq("id", id)
+    .single();
+
+  if (!album) return {};
+
+  const title = `${album.title} | School Gallery`;
+  const description = album.description || "View photos and videos from this album.";
+  const fallbackDomain = "https://nazareno-es-portal.vercel.app";
+  const imageUrl = album.cover_photo || `${fallbackDomain}/default-logo.png`; 
+
+  return {
+    title: title,
+    description: description,
+    openGraph: {
+      title: title,
+      description: description,
+      url: `${fallbackDomain}/gallery/${id}`,
+      siteName: "School Portal",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: album.title,
+        },
+      ],
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: title,
+      description: description,
+      images: [imageUrl],
+    },
+  };
+}
+
+// 2. Your original component logic remains intact
+export default async function AlbumPage({ params }: Props) {
   const { id } = await params;
 
   const { data: album } = await supabase
@@ -25,9 +72,7 @@ export default async function AlbumPage({
   if (!album) {
     return (
       <section className="min-h-screen flex items-center justify-center">
-        <h1 className="text-4xl font-bold">
-          Album not found
-        </h1>
+        <h1 className="text-4xl font-bold">Album not found</h1>
       </section>
     );
   }
@@ -50,9 +95,7 @@ export default async function AlbumPage({
 
           <p className="text-slate-500 mt-6">
             {media?.length || 0} media item
-            {(media?.length || 0) !== 1
-              ? "s"
-              : ""}
+            {(media?.length || 0) !== 1 ? "s" : ""}
           </p>
         </div>
 
@@ -63,9 +106,7 @@ export default async function AlbumPage({
             </h2>
           </div>
         ) : (
-          <GalleryViewer
-            media={media || []}
-          />
+          <GalleryViewer media={media || []} />
         )}
       </div>
     </section>
