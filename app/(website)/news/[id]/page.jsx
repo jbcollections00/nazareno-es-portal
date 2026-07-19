@@ -2,24 +2,14 @@ import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { FaImages } from "react-icons/fa";
+import FloatingBackButton from "@/components/FloatingBackButton";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
-
-  const { data: article } = await supabase
-    .from("news")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (!article) {
-    return {
-      title: "News",
-    };
-  }
+  const { data: article } = await supabase.from("news").select("*").eq("id", id).single();
+  if (!article) return { title: "News" };
 
   const siteDomain = "https://nazareno-es-portal.vercel.app";
-  
   const imageUrl = article.image 
     ? (article.image.startsWith("http") ? article.image : `${siteDomain}${article.image}`)
     : `${siteDomain}/default-logo.png`;
@@ -32,58 +22,40 @@ export async function generateMetadata({ params }) {
       description: article.content?.slice(0, 160),
       url: `${siteDomain}/news/${id}`,
       type: "article",
-      siteName: "Nazareno Elementary School Portal",
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: article.title,
-        },
-        {
-          url: `${siteDomain}/default-logo.png`,
-          width: 1200,
-          height: 630,
-          alt: "Nazareno Elementary School",
-        }
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: article.title,
-      description: article.content?.slice(0, 160),
-      images: [imageUrl],
+      images: [{ url: imageUrl }],
     },
   };
 }
 
 export default async function NewsArticlePage({ params }) {
   const { id } = await params;
-
-  const { data: article, error } = await supabase
-    .from("news")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const { data: article, error } = await supabase.from("news").select("*").eq("id", id).single();
 
   if (error || !article) {
     notFound();
   }
 
-  const paragraphs = (article.content || "")
-    .split("\n")
-    .filter((p) => p.trim() !== "");
+  const paragraphs = (article.content || "").split("\n").filter((p) => p.trim() !== "");
 
   return (
-    <section className="py-16 bg-slate-50 min-h-screen">
-      <div className="max-w-5xl mx-auto px-6">
-        <article className="bg-white rounded-3xl shadow-lg overflow-hidden">
-          {article.image && (
-            <img src={article.image} alt={article.title} className="w-full h-[400px] object-cover" />
-          )}
+    <section className="bg-slate-50 min-h-screen pb-16 relative">
+      {/* Global Fixed Hovering Back Button */}
+      <FloatingBackButton fallbackUrl="/news" />
 
-          <div className="p-10 md:p-16">
-            <p className="text-sm text-slate-500 mb-6">
+      {/* Hero Banner Image Area */}
+      <div className="relative w-full h-[400px] md:h-[500px] bg-slate-900">
+        {article.image ? (
+          <img src={article.image} alt={article.title} className="w-full h-full object-cover opacity-90" />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-r from-blue-900 to-slate-900" />
+        )}
+      </div>
+
+      {/* Floating Card Content Wrapper Container */}
+      <div className="max-w-5xl mx-auto px-6 -mt-32 relative z-20">
+        <article className="bg-white rounded-3xl shadow-xl overflow-hidden">
+          <div className="p-8 md:p-16">
+            <p className="text-sm font-semibold text-blue-700 mb-4">
               {new Date(article.created_at).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -91,7 +63,7 @@ export default async function NewsArticlePage({ params }) {
               })}
             </p>
 
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 leading-tight mb-10">
+            <h1 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight mb-10">
               {article.title}
             </h1>
 
@@ -103,7 +75,7 @@ export default async function NewsArticlePage({ params }) {
               ))}
             </div>
 
-            {/* See Documentation Button (Styled to exactly match project layout view uniform blue styling) */}
+            {/* See Documentation Button Option */}
             {article.album_id && (
               <div className="mt-12 pt-8 border-t border-slate-100 flex justify-center md:justify-start">
                 <Link

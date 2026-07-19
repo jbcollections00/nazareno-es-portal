@@ -10,12 +10,13 @@ import {
   FaEnvelope,
   FaMapMarkerAlt,
   FaFacebook,
-  FaRocket, // Added rocket icon for the new link
+  FaRocket,
 } from "react-icons/fa";
 
 export default function Footer() {
   return (
-    <footer className="bg-blue-950 text-white">
+    /* Added relative positioning and z-50 stack depth to layer over fixed floating components */
+    <footer className="bg-blue-950 text-white relative z-50">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid md:grid-cols-4 gap-10">
           <div>
@@ -70,7 +71,6 @@ export default function Footer() {
                 News
               </Link>
 
-              {/* NEW: Added Into the Future page routing link */}
               <Link
                 href="/projects"
                 className="flex items-center gap-2 text-slate-300 hover:text-white"
