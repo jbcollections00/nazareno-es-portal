@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { FaImages } from "react-icons/fa";
 
 export async function generateMetadata({ params }) {
   const { id } = await params;
@@ -93,13 +95,26 @@ export default async function NewsArticlePage({ params }) {
               {article.title}
             </h1>
 
-            <div className="font-serif text-slate-800 text-[1.15rem] leading-10 text-justify">
+            <div className="font-serif text-slate-800 text-[1.15rem] leading-10 text-justify mb-12">
               {(paragraphs.length > 0 ? paragraphs : [article.content]).map((paragraph, index) => (
                 <p key={index} className="indent-12 mb-6">
                   {paragraph}
                 </p>
               ))}
             </div>
+
+            {/* See Documentation Button (Styled to exactly match project layout view uniform blue styling) */}
+            {article.album_id && (
+              <div className="mt-12 pt-8 border-t border-slate-100 flex justify-center md:justify-start">
+                <Link
+                  href={`/gallery/${article.album_id}`} 
+                  className="inline-flex items-center gap-2 bg-[#1d6bf3] hover:bg-blue-600 text-blue-950 font-bold px-6 py-3.5 rounded-2xl transition-all shadow-md"
+                >
+                  <FaImages className="text-lg" />
+                  See Documentation
+                </Link>
+              </div>
+            )}
           </div>
         </article>
       </div>

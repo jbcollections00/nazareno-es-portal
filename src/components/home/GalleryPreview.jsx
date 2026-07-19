@@ -22,9 +22,7 @@ export default async function GalleryPreview() {
             </h2>
 
             <p className="text-lg text-slate-600 mt-3">
-              Explore memorable moments,
-              school activities, and
-              celebrations.
+              Explore memorable moments, school activities, and celebrations.
             </p>
           </div>
 
@@ -42,30 +40,33 @@ export default async function GalleryPreview() {
             No gallery albums available.
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          /* Using items-stretch to balance out grid container row heights uniformly */
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
             {albums.map((album) => (
               <Link
                 key={album.id}
                 href={`/gallery/${album.id}`}
-                className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+                className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col h-full justify-between"
               >
-                <div className="relative overflow-hidden">
-                  {album.cover_photo ? (
-                    <img
-                      src={album.cover_photo}
-                      alt={album.title}
-                      className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-64 bg-blue-100 flex items-center justify-center">
-                      <FaImages className="text-6xl text-blue-700" />
-                    </div>
-                  )}
+                <div>
+                  {/* Strict horizontal landscape crop container to make portrait entries look uniform */}
+                  <div className="w-full h-56 md:h-60 overflow-hidden bg-slate-100 relative">
+                    {album.cover_photo ? (
+                      <img
+                        src={album.cover_photo}
+                        alt={album.title}
+                        className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-blue-50">
+                        <FaImages className="text-5xl text-blue-700" />
+                      </div>
+                    )}
+                  </div>
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <h3 className="text-xl font-bold text-white">
+                  {/* Title card text box positioned below the graphic layer for complete symmetry */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-slate-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
                       {album.title}
                     </h3>
                   </div>

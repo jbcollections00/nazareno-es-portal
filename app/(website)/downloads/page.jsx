@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import {
-  FaFolder,
-  FaArrowRight,
-} from "react-icons/fa";
+import { FaFolder } from "react-icons/fa";
 
 export default function DownloadsPage() {
   const [folders, setFolders] = useState([]);
@@ -83,19 +80,25 @@ export default function DownloadsPage() {
                 href={`/downloads/${folder.id}`}
                 className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
               >
-                <div className="h-56 bg-blue-50 flex items-center justify-center">
-                  <FaFolder className="text-7xl text-blue-700" />
+                {/* Image Section */}
+                <div className="h-56 bg-slate-100 flex items-center justify-center relative overflow-hidden">
+                  {folder.image ? (
+                    <img
+                      src={folder.image}
+                      alt={folder.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    // Fallback folder icon if there is no picture in Supabase yet
+                    <FaFolder className="text-7xl text-blue-700" />
+                  )}
                 </div>
 
+                {/* Card Info Section */}
                 <div className="p-6">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-4">
+                  <h2 className="text-2xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors duration-300">
                     {folder.name}
                   </h2>
-
-                  <div className="inline-flex items-center gap-2 text-blue-700 font-semibold">
-                    Open Folder
-                    <FaArrowRight className="group-hover:translate-x-1 transition-transform duration-300" />
-                  </div>
                 </div>
               </Link>
             ))}
