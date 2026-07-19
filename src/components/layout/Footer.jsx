@@ -10,6 +10,7 @@ import {
   FaEnvelope,
   FaMapMarkerAlt,
   FaFacebook,
+  FaRocket, // Added rocket icon for the new link
 } from "react-icons/fa";
 
 export default function Footer() {
@@ -35,8 +36,7 @@ export default function Footer() {
             </div>
 
             <p className="text-slate-300">
-              Providing quality education for
-              all learners.
+              Providing quality education for all learners.
             </p>
           </div>
 
@@ -68,6 +68,15 @@ export default function Footer() {
               >
                 <FaNewspaper />
                 News
+              </Link>
+
+              {/* NEW: Added Into the Future page routing link */}
+              <Link
+                href="/projects"
+                className="flex items-center gap-2 text-slate-300 hover:text-white"
+              >
+                <FaRocket />
+                Into the Future
               </Link>
 
               <Link
@@ -150,8 +159,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-blue-800 mt-10 pt-6 text-center text-slate-400">
-          © {new Date().getFullYear()} Nazareno
-          Elementary School
+          © {new Date().getFullYear()} Nazareno Elementary School
         </div>
       </div>
     </footer>
