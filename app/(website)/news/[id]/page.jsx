@@ -35,6 +35,7 @@ export default async function NewsArticlePage({ params }) {
     notFound();
   }
 
+  // Hinati ang paragraphs at inalis ang mga blank spaces
   const paragraphs = (article.content || "").split("\n").filter((p) => p.trim() !== "");
 
   return (
@@ -68,23 +69,68 @@ export default async function NewsArticlePage({ params }) {
             </h1>
 
             <div className="font-serif text-slate-800 text-[1.15rem] leading-10 text-justify mb-12">
-              {(paragraphs.length > 0 ? paragraphs : [article.content]).map((paragraph, index) => (
-                <p key={index} className="indent-12 mb-6">
-                  {paragraph}
-                </p>
-              ))}
+              {(paragraphs.length > 0 ? paragraphs : [article.content]).map((paragraph, index) => {
+                
+                // CATCHY FEATURE 2: PULL-QUOTE
+                // Titingnan natin kung ang talata ay nagsisimula at nagtatapos sa quotation mark (")
+                const isQuote = paragraph.trim().startsWith('"') && paragraph.trim().endsWith('"');
+                
+                if (isQuote) {
+                  return (
+                    <blockquote 
+                      key={index} 
+                      className="border-l-4 border-blue-500 bg-blue-50/70 p-6 my-10 rounded-r-2xl font-sans font-medium text-blue-900 italic text-xl shadow-sm indent-0 text-left"
+                    >
+                      {paragraph}
+                    </blockquote>
+                  );
+                }
+
+                // CATCHY FEATURE 1: DROP CAP
+                // I-a-apply lang natin ang malaking unang letra sa pinakaunang paragraph
+                if (index === 0) {
+                  return (
+                    <p 
+                      key={index} 
+                      className="mb-6 first-letter:text-6xl first-letter:font-black first-letter:text-blue-700 first-letter:float-left first-letter:mr-4 first-letter:mt-2 first-letter:font-sans"
+                    >
+                      {paragraph}
+                    </p>
+                  );
+                }
+
+                // Default paragraph styling (ang orihinal na gusto mo)
+                return (
+                  <p key={index} className="indent-12 mb-6">
+                    {paragraph}
+                  </p>
+                );
+              })}
             </div>
 
-            {/* See Documentation Button Option */}
+            {/* CATCHY FEATURE 4: DOCUMENTATION CTA BANNER */}
             {article.album_id && (
-              <div className="mt-12 pt-8 border-t border-slate-100 flex justify-center md:justify-start">
+              <div className="mt-16 bg-gradient-to-br from-blue-50 to-slate-50 border border-blue-100 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                
+                {/* Text Area ng Banner */}
+                <div className="text-center md:text-left font-sans">
+                  <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2">
+                    Event Documentation
+                  </h3>
+                  <p className="text-slate-600">
+                    Browse our gallery to see more captured moments and photos from this event.
+                  </p>
+                </div>
+
+                {/* Ang Catchy Button */}
                 <Link
                   href={`/gallery/${article.album_id}`} 
-                  className="inline-flex items-center gap-2 bg-[#1d6bf3] hover:bg-blue-600 text-blue-950 font-bold px-6 py-3.5 rounded-2xl transition-all shadow-md"
+                  className="shrink-0 inline-flex items-center gap-3 bg-[#1d6bf3] hover:bg-blue-600 text-white font-bold px-8 py-4 rounded-2xl hover:scale-105 hover:-translate-y-1 hover:shadow-blue-500/40 hover:shadow-xl transition-all duration-300 font-sans"
                 >
-                  <FaImages className="text-lg" />
-                  See Documentation
+                  <FaImages className="text-xl" />
+                  <span>See Documentation</span>
                 </Link>
+                
               </div>
             )}
           </div>
