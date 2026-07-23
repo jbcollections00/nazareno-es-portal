@@ -30,12 +30,12 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm w-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16 md:h-20 gap-4">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16 md:h-20 gap-2">
           
           <Link
             href="/"
-            className="flex items-center gap-2 xl:gap-3 shrink-0"
+            className="flex items-center gap-2 shrink-0"
           >
             <img
               src="/logo.png"
@@ -44,43 +44,39 @@ export default function Header() {
             />
 
             <div className="shrink-0">
-              <h1 className="text-base lg:text-lg xl:text-xl font-extrabold text-slate-900 tracking-tight">
+              <h1 className="text-sm lg:text-base xl:text-lg font-extrabold text-slate-900 tracking-tight">
                 Nazareno Elementary School
               </h1>
-              <p className="text-[10px] lg:text-xs text-slate-500 font-medium">
+              <p className="text-[9px] lg:text-[10px] xl:text-xs text-slate-500 font-medium">
                 Official School Portal
               </p>
             </div>
           </Link>
 
           {/* 
-            FIX: Pinalitan ang 'lg:flex' ng 'xl:flex' 
-            Lalabas lang ang mahabang menu kapag malaki ang screen (1280px pataas)
-            para hindi magka-horizontal scrollbar.
+            IBINALIK SA 'lg:flex'. 
+            Pinaliit ang gap (gap-0.5) at padding (px-1.5) para magkasya ang 8 items sa smaller laptops.
           */}
-          <nav className="hidden xl:flex items-center justify-end ml-auto gap-1">
+          <nav className="hidden lg:flex items-center justify-end ml-auto gap-0.5 xl:gap-1 overflow-hidden">
             {navigation.map((item) => {
               const Icon = item.icon;
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-sm whitespace-nowrap"
+                  className="flex items-center gap-1 px-1.5 xl:px-2.5 py-2 rounded-xl font-semibold text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 text-[11px] xl:text-sm whitespace-nowrap shrink-0"
                 >
-                  <Icon className="text-sm shrink-0" />
+                  <Icon className="text-xs xl:text-sm shrink-0" />
                   <span>{item.name}</span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* 
-            FIX: Pinalitan ang 'lg:hidden' ng 'xl:hidden'
-            Lalabas ang hamburger menu sa mga laptops at tablets na hindi kasya ang buong menu.
-          */}
+          {/* IBINALIK SA 'lg:hidden' ang hamburger button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="xl:hidden text-2xl text-slate-700 hover:text-blue-600 transition-colors shrink-0 ml-auto"
+            className="lg:hidden text-2xl text-slate-700 hover:text-blue-600 transition-colors shrink-0 ml-auto"
             aria-label="Toggle Menu"
           >
             <FaBars />
@@ -89,7 +85,7 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         <div
-          className={`xl:hidden overflow-hidden transition-all duration-500 ease-in-out ${
+          className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${
             mobileOpen
               ? "max-h-[500px] opacity-100 translate-y-0 py-4 border-t"
               : "max-h-0 opacity-0 -translate-y-4"
