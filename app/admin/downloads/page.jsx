@@ -1,423 +1,406 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  FaFolder,
+  FaEye,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
 
-export default function DownloadsAdminPage() {
-  const [title, setTitle] = useState("");
-  const [folderId, setFolderId] = useState("");
-  const [file, setFile] = useState(null);
-
+export default function DownloadsPage() {
   const [downloads, setDownloads] = useState([]);
   const [folders, setFolders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState("");
-
-  const [editingId, setEditingId] = useState(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editFolderId, setEditFolderId] = useState("");
-
+  // Form State
+  const [title, setTitle] = useState("");
+  const [selectedFolderId, setSelectedFolderId] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  const fileInputRef = useRef(null);
+  // Edit State
+  const [editingItem, setEditingItem] = useState(null);
+
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterFolder, setFilterFolder] = useState("ALL");
 
   useEffect(() => {
-    loadDownloads();
-    loadFolders();
+    fetchData();
   }, []);
 
-  async function loadFolders() {
-    const { data } = await supabase
+  async function fetchData() {
+    setLoading(true);
+
+    // Fetch Folders
+    const { data: folderData } = await supabase
       .from("download_folders")
       .select("*")
-      .order("name");
+      .order("name", { ascending: true });
 
-    setFolders(data || []);
-  }
+    if (folderData) setFolders(folderData);
 
-  async function loadDownloads() {
-    const { data } = await supabase
+    // Fetch Downloads
+    const { data: downloadData } = await supabase
       .from("downloads")
-      .select(`
-        *,
-        download_folders (
-          id,
-          name
-        )
-      `)
-      .order("id", {
-        ascending: false,
-      });
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    setDownloads(data || []);
+    if (downloadData) setDownloads(downloadData);
+
+    setLoading(false);
   }
 
-  function formatFileSize(bytes) {
-    if (!bytes) return "";
-
-    const sizes = [
-      "B",
-      "KB",
-      "MB",
-      "GB",
-      "TB",
-    ];
-
-    const i = Math.floor(
-      Math.log(bytes) / Math.log(1024)
-    );
-
-    return `${(
-      bytes / Math.pow(1024, i)
-    ).toFixed(1)} ${sizes[i]}`;
-  }
-
-  async function uploadFile(e) {
-    e.preventDefault();
-
-    if (!file) {
-      alert("Please select a file.");
-      return;
+  // Helper to resolve folder name for any file item
+  function getFileFolderName(file) {
+    if (file.folder_name) return file.folder_name;
+    if (file.folder_id) {
+      const matched = folders.find(
+        (f) => String(f.id) === String(file.folder_id)
+      );
+      if (matched) return matched.name;
     }
+    return null;
+  }
+
+  // File Upload / Save Handler
+  async function handleSaveFile(e) {
+    e.preventDefault();
+    if (!title) return;
 
     setUploading(true);
+    let fileUrl = editingItem ? editingItem.file_url : "";
+    let fileSizeStr = editingItem ? editingItem.file_size : "";
 
-    const fileName = `${Date.now()}-${file.name}`;
+    // Upload file to Supabase Storage if a new file is chosen
+    if (selectedFile) {
+      const fileExt = selectedFile.name.split(".").pop();
+      const fileName = `${Date.now()}_${Math.random()
+        .toString(36)
+        .substring(2)}.${fileExt}`;
+      const filePath = `documents/${fileName}`;
 
-    const { error: uploadError } =
-      await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("downloads")
-        .upload(fileName, file);
+        .upload(filePath, selectedFile);
 
-    if (uploadError) {
-      setUploading(false);
-      alert(uploadError.message);
-      return;
+      if (uploadError) {
+        alert("File upload failed: " + uploadError.message);
+        setUploading(false);
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("downloads")
+        .getPublicUrl(filePath);
+
+      fileUrl = publicUrlData.publicUrl;
+      fileSizeStr = formatBytes(selectedFile.size);
     }
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage
-      .from("downloads")
-      .getPublicUrl(fileName);
+    const matchedFolderObj = folders.find(
+      (f) => String(f.id) === String(selectedFolderId) || f.name === selectedFolderId
+    );
 
-    const { error } = await supabase
-      .from("downloads")
-      .insert([
+    const folderIdVal = matchedFolderObj ? matchedFolderObj.id : null;
+    const folderNameVal = matchedFolderObj ? matchedFolderObj.name : null;
+
+    if (editingItem) {
+      // Update Record
+      const { error } = await supabase
+        .from("downloads")
+        .update({
+          title,
+          folder_id: folderIdVal,
+          folder_name: folderNameVal,
+          ...(fileUrl && { file_url: fileUrl }),
+          ...(fileSizeStr && { file_size: fileSizeStr }),
+        })
+        .eq("id", editingItem.id);
+
+      if (error) {
+        alert("Failed to update file: " + error.message);
+      } else {
+        resetForm();
+        fetchData();
+      }
+    } else {
+      // Insert Record
+      const { error } = await supabase.from("downloads").insert([
         {
           title,
-          folder_id: folderId,
-          file_url: publicUrl,
-          file_size: file.size,
+          folder_id: folderIdVal,
+          folder_name: folderNameVal,
+          file_url: fileUrl,
+          file_size: fileSizeStr || "500 KB",
         },
       ]);
 
-    setUploading(false);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setTitle("");
-    setFolderId("");
-    setFile(null);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
-    loadDownloads();
-  }
-
-  async function saveEdit(id) {
-    const { error } = await supabase
-      .from("downloads")
-      .update({
-        title: editTitle,
-        folder_id: editFolderId,
-      })
-      .eq("id", id);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setEditingId(null);
-    loadDownloads();
-  }
-
-  async function deleteDownload(item) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${item.title}"?`
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const filePath =
-      item.file_url.split("/").pop();
-
-    await supabase.storage
-      .from("downloads")
-      .remove([filePath]);
-
-    await supabase
-      .from("downloads")
-      .delete()
-      .eq("id", item.id);
-
-    loadDownloads();
-  }
-
-  const filtered = downloads.filter((x) =>
-    x.title
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
-
-  const grouped = filtered.reduce(
-    (acc, item) => {
-      const folder =
-        item.download_folders?.name ||
-        "No Folder";
-
-      if (!acc[folder]) {
-        acc[folder] = [];
+      if (error) {
+        alert("Failed to save file: " + error.message);
+      } else {
+        resetForm();
+        fetchData();
       }
+    }
 
-      acc[folder].push(item);
+    setUploading(false);
+  }
 
-      return acc;
-    },
-    {}
-  );
+  function formatBytes(bytes, decimals = 1) {
+    if (!bytes || bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+  }
+
+  function resetForm() {
+    setTitle("");
+    setSelectedFolderId("");
+    setSelectedFile(null);
+    setEditingItem(null);
+  }
+
+  function handleEditClick(item) {
+    setEditingItem(item);
+    setTitle(item.title || "");
+    const resolvedFolderName = getFileFolderName(item);
+    const matched = folders.find((f) => f.name === resolvedFolderName);
+    setSelectedFolderId(matched ? matched.id : item.folder_id || "");
+    setSelectedFile(null);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function handleDelete(id) {
+    if (!confirm("Are you sure you want to delete this file?")) return;
+
+    const { error } = await supabase.from("downloads").delete().eq("id", id);
+    if (error) {
+      alert("Failed to delete file: " + error.message);
+    } else {
+      fetchData();
+    }
+  }
+
+  // Filter Logic
+  const filteredDownloads = downloads.filter((item) => {
+    const matchesSearch = item.title
+      ?.toLowerCase()
+      .includes(searchQuery.toLowerCase());
+
+    const itemFolderName = getFileFolderName(item);
+    const itemFolderId = item.folder_id;
+
+    const matchesFolder =
+      filterFolder === "ALL" ||
+      String(itemFolderId) === String(filterFolder) ||
+      itemFolderName === filterFolder;
+
+    return matchesSearch && matchesFolder;
+  });
+
+  // Group filtered downloads by folder name
+  const groupedDownloads = filteredDownloads.reduce((acc, item) => {
+    const key = getFileFolderName(item) || "Unassigned Files";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
 
   return (
-    <div className="p-10">
-      <h1 className="text-5xl font-bold mb-8">
+    <div className="max-w-5xl space-y-8 pb-12 px-4 lg:pr-8">
+      <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
         Downloads Management
       </h1>
 
-      <div className="bg-white p-8 rounded-xl shadow mb-8">
-        <h2 className="text-3xl font-semibold mb-5">
-          Upload File
+      {/* Upload File Section Card */}
+      <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm space-y-6">
+        <h2 className="text-2xl font-bold text-slate-900">
+          {editingItem ? "Edit File" : "Upload File"}
         </h2>
 
-        <form
-          onSubmit={uploadFile}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSaveFile} className="space-y-5">
+          {/* Document Title */}
+          <div>
+            <input
+              type="text"
+              placeholder="Document Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-4 py-3.5 border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          {/* Select Folder */}
+          <div>
+            <select
+              value={selectedFolderId}
+              onChange={(e) => setSelectedFolderId(e.target.value)}
+              className="w-full px-4 py-3.5 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="">Select Folder</option>
+              {folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>
+                  {folder.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Choose File + Action Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+            <div className="flex items-center gap-3">
+              <label className="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-4 py-2.5 rounded-xl border border-slate-300 transition text-sm">
+                Choose File
+                <input
+                  type="file"
+                  onChange={(e) => setSelectedFile(e.target.files[0])}
+                  className="hidden"
+                />
+              </label>
+              <span className="text-sm text-slate-500 truncate max-w-[200px] md:max-w-xs">
+                {selectedFile
+                  ? selectedFile.name
+                  : editingItem
+                  ? "Keep current file"
+                  : "No file chosen"}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {editingItem && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="px-5 py-3 rounded-xl border border-slate-300 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition w-full sm:w-auto"
+                >
+                  Cancel
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={uploading}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3.5 rounded-xl transition text-base shadow-sm disabled:opacity-50 w-full sm:w-auto whitespace-nowrap"
+              >
+                {uploading
+                  ? "Uploading..."
+                  : editingItem
+                  ? "Update File"
+                  : "Upload File"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {/* Search Bar + Folder Filter Dropdown */}
+      <div className="flex flex-col md:flex-row items-center gap-4">
+        <div className="w-full flex-1">
           <input
             type="text"
-            placeholder="Document Title"
-            value={title}
-            onChange={(e) =>
-              setTitle(e.target.value)
-            }
-            className="w-full border p-3 rounded-lg"
-            required
+            placeholder="Search files..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-5 py-3.5 border border-slate-300 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           />
+        </div>
 
+        <div className="w-full md:w-64">
           <select
-            value={folderId}
-            onChange={(e) =>
-              setFolderId(e.target.value)
-            }
-            className="w-full border p-3 rounded-lg"
-            required
+            value={filterFolder}
+            onChange={(e) => setFilterFolder(e.target.value)}
+            className="w-full px-4 py-3.5 border border-slate-300 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
-            <option value="">
-              Select Folder
-            </option>
-
+            <option value="ALL">All Folders</option>
             {folders.map((folder) => (
-              <option
-                key={folder.id}
-                value={folder.id}
-              >
+              <option key={folder.id} value={folder.id}>
                 {folder.name}
               </option>
             ))}
           </select>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            onChange={(e) =>
-              setFile(
-                e.target.files?.[0] || null
-              )
-            }
-            required
-          />
-
-          <button
-            type="submit"
-            disabled={uploading}
-            className="bg-blue-700 text-white px-6 py-3 rounded-lg disabled:opacity-50"
-          >
-            {uploading ? (
-              <span className="flex items-center gap-2">
-                <span className="animate-spin">
-                  ⏳
-                </span>
-                Uploading...
-              </span>
-            ) : (
-              "Upload File"
-            )}
-          </button>
-        </form>
+        </div>
       </div>
 
-      <input
-        type="text"
-        placeholder="Search files..."
-        value={search}
-        onChange={(e) =>
-          setSearch(e.target.value)
-        }
-        className="w-full border p-3 rounded-lg mb-8"
-      />
+      {/* Files List Display */}
+      {loading ? (
+        <div className="p-8 text-center text-slate-500">Loading files...</div>
+      ) : Object.keys(groupedDownloads).length === 0 ? (
+        <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-200">
+          No files found.
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(groupedDownloads).map(([folderName, files]) => (
+            <div
+              key={folderName}
+              className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4 overflow-hidden"
+            >
+              {/* Folder Group Header */}
+              <div className="flex items-center gap-3 text-2xl font-bold text-slate-900 pb-2 border-b">
+                <FaFolder className="text-amber-400 text-3xl shrink-0" />
+                <span className="truncate">{folderName}</span>
+              </div>
 
-      {Object.keys(grouped).map(
-        (folderName) => (
-          <div
-            key={folderName}
-            className="bg-white rounded-xl p-6 shadow mb-8"
-          >
-            <h2 className="text-2xl font-bold mb-4">
-              📁 {folderName}
-            </h2>
-
-            {grouped[folderName].map(
-              (item) => (
-                <div
-                  key={item.id}
-                  className="border rounded-lg p-4 mb-4"
-                >
-                  {editingId === item.id ? (
-                    <>
-                      <input
-                        value={editTitle}
-                        onChange={(e) =>
-                          setEditTitle(
-                            e.target.value
-                          )
-                        }
-                        className="border p-2 rounded w-full mb-2"
-                      />
-
-                      <select
-                        value={editFolderId}
-                        onChange={(e) =>
-                          setEditFolderId(
-                            e.target.value
-                          )
-                        }
-                        className="border p-2 rounded w-full mb-2"
-                      >
-                        {folders.map(
-                          (folder) => (
-                            <option
-                              key={folder.id}
-                              value={folder.id}
-                            >
-                              {folder.name}
-                            </option>
-                          )
-                        )}
-                      </select>
-
-                      <button
-                        onClick={() =>
-                          saveEdit(item.id)
-                        }
-                        className="bg-green-600 text-white px-4 py-2 rounded mr-2"
-                      >
-                        Save
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          setEditingId(null)
-                        }
-                        className="bg-gray-500 text-white px-4 py-2 rounded"
-                      >
-                        Cancel
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className="font-bold">
-                        {item.title}
+              <div className="space-y-3">
+                {files.map((file) => (
+                  <div
+                    key={file.id}
+                    className="p-5 rounded-2xl border border-slate-200 hover:border-slate-300 transition flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white"
+                  >
+                    {/* Left Side: Document Details */}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-lg font-bold text-slate-900 truncate">
+                        {file.title}
                       </h3>
-
-                      {item.file_size && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          Size:{" "}
-                          {formatFileSize(
-                            item.file_size
-                          )}
+                      {file.file_size && (
+                        <p className="text-xs text-slate-400 mt-1">
+                          Size: {file.file_size}
                         </p>
                       )}
+                    </div>
 
-                      <div className="flex gap-2 mt-3 flex-wrap">
-                        <a
-                          href={item.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-600 text-white px-4 py-2 rounded"
-                        >
-                          View
-                        </a>
+                    {/* Right-Most Side: Action Icon Buttons */}
+                    <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto">
+                      {/* Preview / View Icon Button */}
+                      <a
+                        href={file.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl transition flex items-center justify-center text-base"
+                        title="Preview File"
+                      >
+                        <FaEye />
+                      </a>
 
-                        <a
-                          href={item.file_url}
-                          download
-                          className="bg-green-600 text-white px-4 py-2 rounded"
-                        >
-                          Download
-                        </a>
+                      {/* Edit Icon Button */}
+                      <button
+                        onClick={() => handleEditClick(file)}
+                        className="bg-amber-400 hover:bg-amber-500 text-white p-3 rounded-xl transition flex items-center justify-center text-base"
+                        title="Edit File"
+                      >
+                        <FaEdit />
+                      </button>
 
-                        <button
-                          onClick={() => {
-                            setEditingId(
-                              item.id
-                            );
-                            setEditTitle(
-                              item.title
-                            );
-                            setEditFolderId(
-                              item.folder_id
-                            );
-                          }}
-                          className="bg-yellow-500 text-white px-4 py-2 rounded"
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            deleteDownload(
-                              item
-                            )
-                          }
-                          className="bg-red-600 text-white px-4 py-2 rounded"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )
-            )}
-          </div>
-        )
+                      {/* Delete Icon Button */}
+                      <button
+                        onClick={() => handleDelete(file.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl transition flex items-center justify-center text-base"
+                        title="Delete File"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

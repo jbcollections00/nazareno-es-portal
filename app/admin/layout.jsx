@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import {
   FaTachometerAlt,
@@ -16,7 +17,7 @@ import {
   FaBars,
   FaChevronDown,
   FaChevronRight,
-  FaRocket, // Added rocket icon
+  FaRocket,
 } from "react-icons/fa";
 
 export default function AdminLayout({ children }) {
@@ -60,7 +61,9 @@ export default function AdminLayout({ children }) {
         setLoading(false);
         return;
       }
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         router.push("/admin/login");
         return;
@@ -92,7 +95,7 @@ export default function AdminLayout({ children }) {
       icon: <FaNewspaper />,
     },
     {
-      href: "/admin/projects", // New Projects view registration
+      href: "/admin/projects",
       label: "Projects",
       icon: <FaRocket />,
     },
@@ -113,7 +116,11 @@ export default function AdminLayout({ children }) {
       icon: <FaDownload />,
       children: [
         { href: "/admin/downloads", label: "Files" },
-        { href: "/admin/download-folders", label: "Folders", icon: <FaFolder /> },
+        {
+          href: "/admin/download-folders",
+          label: "Folders",
+          icon: <FaFolder />,
+        },
       ],
     },
   ];
@@ -125,7 +132,9 @@ export default function AdminLayout({ children }) {
         return (
           <div key={item.key}>
             <button
-              onClick={() => setOpenMenus((prev) => ({ ...prev, [item.key]: !prev[item.key] }))}
+              onClick={() =>
+                setOpenMenus((prev) => ({ ...prev, [item.key]: !prev[item.key] }))
+              }
               title={collapsed ? item.label : ""}
               className="w-full flex items-center justify-between px-3 py-3 rounded-lg hover:bg-blue-800 transition"
             >
@@ -135,8 +144,14 @@ export default function AdminLayout({ children }) {
               </div>
               {!collapsed && (isOpen ? <FaChevronDown /> : <FaChevronRight />)}
             </button>
-            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${!collapsed && isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
-              <div className={`${level === 0 ? "ml-8" : "ml-6"} mt-2 flex flex-col gap-2`}>
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                !collapsed && isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+              }`}
+            >
+              <div
+                className={`${level === 0 ? "ml-8" : "ml-6"} mt-2 flex flex-col gap-2`}
+              >
                 {renderMenu(item.children, level + 1)}
               </div>
             </div>
@@ -151,7 +166,9 @@ export default function AdminLayout({ children }) {
           href={item.href}
           title={collapsed ? item.label : ""}
           className={`flex items-center justify-between px-3 py-3 rounded-lg transition ${
-            active ? "bg-yellow-400 text-blue-900 font-semibold" : "hover:bg-blue-800"
+            active
+              ? "bg-yellow-400 text-blue-900 font-semibold"
+              : "hover:bg-blue-800"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -169,26 +186,63 @@ export default function AdminLayout({ children }) {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">Loading...</div>
+    );
   }
 
   if (pathname === "/admin/login") return children;
 
   return (
     <div className="flex min-h-screen bg-slate-100">
-      <aside className={`bg-blue-900 text-white p-6 flex flex-col transition-all duration-500 ease-in-out ${collapsed ? "w-20" : "w-64"}`}>
-        <div className="flex items-center justify-between mb-8">
-          {!collapsed && <h1 className="text-2xl font-bold">Admin Panel</h1>}
-          <button onClick={() => setCollapsed(!collapsed)} className="text-xl" title="Toggle Sidebar">
-            <FaBars />
-          </button>
+      <aside
+        className={`bg-blue-900 text-white p-6 flex flex-col transition-all duration-500 ease-in-out ${
+          collapsed ? "w-20" : "w-64"
+        }`}
+      >
+        {/* Logo and Admin Panel Header with Hamburger Next to It */}
+        <div className="flex flex-col items-center mb-6">
+          <Image
+            src="/logo.png"
+            alt="School Logo"
+            width={100}
+            height={100}
+            className={`rounded-full aspect-square object-cover transition-all duration-300 ${
+              collapsed ? "w-10 h-10 mb-2" : "w-24 h-24 mb-4"
+            }`}
+            priority
+          />
+
+          <div
+            className={`flex items-center ${
+              collapsed ? "justify-center" : "justify-between w-full px-1"
+            }`}
+          >
+            {!collapsed && (
+              <h1 className="text-xl font-bold whitespace-nowrap">Admin Panel</h1>
+            )}
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="text-lg hover:text-yellow-400 transition"
+              title="Toggle Sidebar"
+            >
+              <FaBars />
+            </button>
+          </div>
         </div>
+
         <nav className="flex flex-col gap-2">{renderMenu(menuItems)}</nav>
-        <button onClick={logout} title={collapsed ? "Logout" : ""} className="mt-auto flex items-center gap-3 bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg transition">
+
+        <button
+          onClick={logout}
+          title={collapsed ? "Logout" : ""}
+          className="mt-auto flex items-center gap-3 bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg transition"
+        >
           <FaSignOutAlt />
           {!collapsed && <span>Logout</span>}
         </button>
       </aside>
+
       <main className="flex-1 p-8">{children}</main>
     </div>
   );

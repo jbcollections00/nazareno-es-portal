@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+// Pinalitan ang icons para sa Save at Cancel
+import { FaEdit, FaTrash, FaSave, FaTimesCircle, FaFolderOpen } from "react-icons/fa";
 
 export default function DownloadFoldersPage() {
   const [name, setName] = useState("");
@@ -37,15 +39,16 @@ export default function DownloadFoldersPage() {
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `${fileName}`;
 
+    // Gumamit na tayo ng "gallery" bucket imbes na "folders" para iwas "Bucket not found"
     const { error: uploadError } = await supabase.storage
-      .from("folders") // Change this to your public bucket name
+      .from("gallery") 
       .upload(filePath, file);
 
     if (uploadError) {
       throw uploadError;
     }
 
-    const { data } = supabase.storage.from("folders").getPublicUrl(filePath);
+    const { data } = supabase.storage.from("gallery").getPublicUrl(filePath);
     return data.publicUrl;
   }
 
@@ -148,134 +151,194 @@ export default function DownloadFoldersPage() {
   }
 
   return (
-    <div className="p-10 max-w-4xl mx-auto">
-      <h1 className="text-5xl font-bold mb-8">Folder Management</h1>
+    <div className="max-w-7xl mx-auto pb-10">
+      <h1 className="text-5xl font-bold mb-8 text-slate-900 tracking-tight">
+        Folder Management
+      </h1>
 
-      {/* Creation Form */}
-      <div className="bg-white p-6 rounded-xl shadow mb-8">
-        <h2 className="text-xl font-semibold mb-4">Create New Folder</h2>
-        <form onSubmit={addFolder} className="space-y-4">
+      {/* Creation Form Area */}
+      <form
+        onSubmit={addFolder}
+        className="bg-white rounded-3xl shadow-sm p-6 md:p-8 mb-8 border border-slate-200"
+      >
+        <h2 className="text-2xl font-bold mb-6 text-slate-900">
+          Create New Folder
+        </h2>
+
+        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Folder Name</label>
             <input
               type="text"
               placeholder="e.g., Learning Materials"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border p-3 rounded-lg"
+              className="w-full border border-slate-300 px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Folder Cover Banner</label>
+          {/* Cover Image Upload Section */}
+          <div className="flex flex-col gap-3 mt-2">
+            <label className="text-sm font-semibold text-slate-700">Folder Cover Banner:</label>
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-              className="w-full border p-2 rounded-lg bg-slate-50 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              onChange={(e) => setImageFile(e.target.files[0] || null)}
+              className="text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer w-fit transition"
               required
             />
           </div>
+
+          {imageFile && (
+            <img
+              src={URL.createObjectURL(imageFile)}
+              alt="Cover Preview"
+              className="w-48 h-48 object-cover rounded-xl border border-slate-200 mt-2 shadow-sm"
+            />
+          )}
 
           <button
             type="submit"
             disabled={uploading}
-            className="bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 disabled:bg-slate-400 transition"
+            className="mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold px-8 py-3.5 rounded-xl transition text-base shadow-sm"
           >
             {uploading ? "Uploading Folder..." : "Add Folder"}
           </button>
-        </form>
-      </div>
+        </div>
+      </form>
 
-      {/* Existing Folders List */}
-      <div className="bg-white p-6 rounded-xl shadow">
-        <h2 className="text-xl font-semibold mb-4">Active Folders</h2>
-        {folders.length === 0 ? (
-          <p className="text-slate-500">No folders found.</p>
-        ) : (
-          folders.map((folder) => (
-            <div
-              key={folder.id}
-              className="border rounded-xl p-4 mb-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
-            >
-              {editingId === folder.id ? (
-                <div className="flex flex-col gap-3 w-full">
-                  <input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="border p-2 rounded-lg w-full"
-                    placeholder="Edit folder name"
-                  />
-                  <div className="flex flex-col gap-1">
-                    <span className="text-xs text-slate-500">Change cover image (optional):</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setEditImageFile(e.target.files[0])}
-                      className="border p-2 rounded-lg text-sm"
-                    />
-                  </div>
+      {/* Records Display Container */}
+      <div className="bg-white rounded-3xl shadow-sm p-6 md:p-8 border border-slate-200">
+        <h2 className="text-2xl font-bold mb-6 text-slate-900">
+          Active Folders
+        </h2>
 
-                  <div className="flex gap-2 justify-end mt-2">
-                    <button
-                      onClick={() => saveFolder(folder.id, folder.image)}
-                      disabled={uploading}
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 disabled:bg-slate-400"
-                    >
-                      Save Changes
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setEditingId(null);
-                        setEditName("");
-                        setEditImageFile(null);
-                      }}
-                      className="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4">
-                    {folder.image && (
-                      <img
-                        src={folder.image}
-                        alt=""
-                        className="w-16 h-12 object-cover rounded-md bg-slate-100 border shadow-sm"
+        <div className="space-y-4">
+          {folders.length === 0 ? (
+            <p className="text-center py-12 text-slate-500 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+              No folders found. Create your first folder above.
+            </p>
+          ) : (
+            folders.map((folder) => (
+              <div
+                key={folder.id}
+                className="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden transition hover:border-slate-300"
+              >
+                {editingId === folder.id ? (
+                  // --- EDIT MODE ---
+                  <div className="bg-slate-50 p-5 md:p-6 flex flex-col gap-4 border-b border-slate-200">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Edit Name</label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full border border-slate-300 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                       />
-                    )}
-                    <div className="font-bold text-slate-800 text-lg">
-                      {folder.name}
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4 pt-2">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Update Cover Image</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setEditImageFile(e.target.files[0] || null)}
+                          className="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-white file:text-slate-700 hover:file:bg-slate-100 cursor-pointer border border-slate-300 rounded-xl"
+                        />
+                      </div>
+                      
+                      <div className="flex gap-4">
+                        {folder.image && !editImageFile && (
+                          <div>
+                            <span className="text-xs font-bold text-slate-400 block mb-1">Current Cover:</span>
+                            <img src={folder.image} alt="Current Cover" className="w-24 h-24 object-cover rounded-lg border border-slate-200" />
+                          </div>
+                        )}
+                        {editImageFile && (
+                          <div>
+                            <span className="text-xs font-bold text-amber-500 block mb-1">New Preview:</span>
+                            <img src={URL.createObjectURL(editImageFile)} alt="New Preview" className="w-24 h-24 object-cover rounded-lg border border-amber-300" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 justify-end pt-4 border-t border-slate-200 mt-2">
+                      <button
+                        onClick={() => saveFolder(folder.id, folder.image)}
+                        disabled={uploading}
+                        className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 text-white font-semibold px-6 py-2.5 rounded-xl transition flex items-center gap-2 text-sm"
+                      >
+                        <FaSave /> {uploading ? "Saving..." : "Save Changes"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingId(null);
+                          setEditName("");
+                          setEditImageFile(null);
+                        }}
+                        disabled={uploading}
+                        className="bg-slate-400 hover:bg-slate-500 text-white font-semibold px-6 py-2.5 rounded-xl transition flex items-center gap-2 text-sm"
+                      >
+                        <FaTimesCircle /> Cancel
+                      </button>
                     </div>
                   </div>
+                ) : (
+                  // --- NORMAL VIEW MODE ---
+                  <div className="flex flex-col sm:flex-row sm:items-center">
+                    {/* Cover Image Thumbnail */}
+                    {folder.image ? (
+                      <img
+                        src={folder.image}
+                        alt={folder.name}
+                        className="w-full sm:w-40 sm:h-32 object-cover shrink-0 border-b sm:border-b-0 sm:border-r border-slate-200"
+                      />
+                    ) : (
+                      <div className="w-full sm:w-40 h-32 bg-slate-50 flex flex-col items-center justify-center shrink-0 border-b sm:border-b-0 sm:border-r border-slate-200 p-4 text-center">
+                        <FaFolderOpen className="text-3xl text-slate-300 mb-2" />
+                        <span className="text-xs text-slate-400 font-medium">No Cover</span>
+                      </div>
+                    )}
 
-                  <div className="flex gap-2 justify-end">
-                    <button
-                      onClick={() => {
-                        setEditingId(folder.id);
-                        setEditName(folder.name);
-                      }}
-                      className="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-yellow-600"
-                    >
-                      Edit
-                    </button>
+                    {/* Content & Actions Container */}
+                    <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between p-5 md:p-6 gap-4 min-w-0">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-xl md:text-2xl text-slate-900 break-words leading-snug">
+                          {folder.name}
+                        </h3>
+                      </div>
 
-                    <button
-                      onClick={() => deleteFolder(folder.id)}
-                      className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700"
-                    >
-                      Delete
-                    </button>
+                      {/* Icon Actions */}
+                      <div className="flex gap-2 shrink-0 md:justify-end border-t md:border-t-0 border-slate-100 pt-4 md:pt-0">
+                        <button
+                          onClick={() => {
+                            setEditingId(folder.id);
+                            setEditName(folder.name);
+                            setEditImageFile(null);
+                          }}
+                          className="bg-amber-400 hover:bg-amber-500 text-white p-3 rounded-xl transition flex items-center justify-center shadow-sm"
+                          title="Edit Folder"
+                        >
+                          <FaEdit className="text-base" />
+                        </button>
+
+                        <button
+                          onClick={() => deleteFolder(folder.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl transition flex items-center justify-center shadow-sm"
+                          title="Delete Folder"
+                        >
+                          <FaTrash className="text-base" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </>
-              )}
-            </div>
-          ))
-        )}
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
