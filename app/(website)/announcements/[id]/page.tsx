@@ -1,16 +1,63 @@
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { Metadata } from "next";
 import {
   FaCalendarAlt,
   FaBullhorn,
   FaInfoCircle,
 } from "react-icons/fa";
 
-export default async function AnnouncementDetailsPage({
-  params,
-}: {
+type Props = {
   params: Promise<{ id: string }>;
-}) {
+};
+
+// 🚀 DYNAMIC METADATA PARA SA FACEBOOK/MESSENGER PREVIEW
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+
+  const { data: announcement } = await supabase
+    .from("announcements")
+    .select("title, content, image_url")
+    .eq("id", id)
+    .single();
+
+  if (!announcement) {
+    return {
+      title: "Anunsyo - Nazareno Elementary School",
+    };
+  }
+
+  // Default fallback image kung sakaling walang nai-upload na poster
+  const previewImage = announcement.image_url || "https://nazareno-es-portal.vercel.app/logo.png";
+
+  return {
+    title: announcement.title,
+    description: announcement.content?.slice(0, 160) || "Magbasa ng karagdagang detalye ukol sa anunsyong ito.",
+    openGraph: {
+      title: announcement.title,
+      description: announcement.content?.slice(0, 160),
+      url: `https://nazareno-es-portal.vercel.app/announcements/${id}`,
+      siteName: "Nazareno Elementary School Portal",
+      images: [
+        {
+          url: previewImage,
+          width: 1200,
+          height: 630,
+          alt: announcement.title,
+        },
+      ],
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: announcement.title,
+      description: announcement.content?.slice(0, 160),
+      images: [previewImage],
+    },
+  };
+}
+
+export default async function AnnouncementDetailsPage({ params }: Props) {
   const { id } = await params;
 
   // Fetch announcement data from Supabase
