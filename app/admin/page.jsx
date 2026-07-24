@@ -10,6 +10,7 @@ import {
   FaDownload,
   FaEnvelope,
   FaRocket,
+  FaBullhorn, // Added icon
 } from "react-icons/fa";
 
 export default function AdminPage() {
@@ -20,6 +21,7 @@ export default function AdminPage() {
     albums: 0,
     downloads: 0,
     messages: 0,
+    announcements: 0, // Added state
   });
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function AdminPage() {
       albumsResult,
       downloadsResult,
       messagesResult,
+      announcementsResult, // Added fetch query
     ] = await Promise.all([
       supabase.from("faculty").select("*", { count: "exact", head: true }),
       supabase.from("news").select("*", { count: "exact", head: true }),
@@ -41,6 +44,7 @@ export default function AdminPage() {
       supabase.from("albums").select("*", { count: "exact", head: true }),
       supabase.from("downloads").select("*", { count: "exact", head: true }),
       supabase.from("contact_messages").select("*", { count: "exact", head: true }),
+      supabase.from("announcements").select("*", { count: "exact", head: true }),
     ]);
 
     setStats({
@@ -50,10 +54,18 @@ export default function AdminPage() {
       albums: albumsResult.count || 0,
       downloads: downloadsResult.count || 0,
       messages: messagesResult.count || 0,
+      announcements: announcementsResult.count || 0, // Assigned result
     });
   }
 
   const cards = [
+    {
+      title: "Announcements",
+      count: stats.announcements,
+      icon: <FaBullhorn />,
+      href: "/admin/announcements",
+      color: "bg-amber-500",
+    },
     {
       title: "Faculty",
       count: stats.faculty,

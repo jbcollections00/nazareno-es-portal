@@ -1,4 +1,5 @@
 import Hero from "@/components/home/Hero";
+import AnnouncementSection from "@/components/home/AnnouncementSection"; // 1. Added import
 import QuickLinks from "@/components/home/QuickLinks";
 import Stats from "@/components/home/Stats";
 import PrincipalMessage from "@/components/home/PrincipalMessage";
@@ -25,6 +26,7 @@ export default function Home() {
       {/* Main Content Sections */}
       <div className="relative z-10 flex flex-col gap-y-8 md:gap-y-16 pb-16">
         <Hero />
+        <AnnouncementSection /> {/* 2. Placed right between Hero and QuickLinks */}
         <QuickLinks />
         <Stats />
         <PrincipalMessage />
