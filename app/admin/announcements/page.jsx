@@ -25,7 +25,7 @@ export default function AdminAnnouncementsPage() {
   // Form States
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [eventDate, setEventDate] = useState("");
+  const [eventDate, setEventDate] = useState(""); // Holds full datetime ISO/string
   const [category, setCategory] = useState("General");
 
   // Image Upload States
@@ -48,6 +48,15 @@ export default function AdminAnnouncementsPage() {
     setLoading(false);
   }
 
+  // Helper to convert ISO/Database date to standard "YYYY-MM-DDTHH:MM" format required by <input type="datetime-local" />
+  const formatForDateTimeInput = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   // Handle Local Image Selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -68,7 +77,7 @@ export default function AdminAnnouncementsPage() {
     setEditingId(item.id);
     setTitle(item.title || "");
     setContent(item.content || "");
-    setEventDate(item.event_date || "");
+    setEventDate(formatForDateTimeInput(item.event_date));
     setCategory(item.category || "General");
     setExistingImageUrl(item.image_url || "");
     setImagePreview(item.image_url || null);
@@ -113,10 +122,13 @@ export default function AdminAnnouncementsPage() {
         finalImageUrl = urlData.publicUrl;
       }
 
+      // Convert datetime-local value into a proper ISO String for Supabase DB
+      const isoEventDate = eventDate ? new Date(eventDate).toISOString() : null;
+
       const announcementPayload = {
         title,
         content,
-        event_date: eventDate,
+        event_date: isoEventDate,
         category,
         image_url: finalImageUrl,
       };
@@ -163,7 +175,7 @@ export default function AdminAnnouncementsPage() {
     }
   }
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const now = new Date();
 
   return (
     <div className="p-6 md:p-8">
@@ -197,14 +209,16 @@ export default function AdminAnnouncementsPage() {
                 <th className="p-5">Poster</th>
                 <th className="p-5">Title</th>
                 <th className="p-5">Tag</th>
-                <th className="p-5">Event Date</th>
+                <th className="p-5">Expiration Date & Time</th>
                 <th className="p-5">Status</th>
                 <th className="p-5 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y text-sm">
               {announcements.map((item) => {
-                const isExpired = item.event_date < todayStr;
+                const itemDate = item.event_date ? new Date(item.event_date) : null;
+                const isExpired = itemDate ? itemDate < now : false;
+
                 return (
                   <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="p-5">
@@ -229,7 +243,17 @@ export default function AdminAnnouncementsPage() {
                       </span>
                     </td>
 
-                    <td className="p-5 font-mono text-slate-600">{item.event_date}</td>
+                    <td className="p-5 font-mono text-slate-600">
+                      {itemDate
+                        ? itemDate.toLocaleString([], {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "N/A"}
+                    </td>
 
                     <td className="p-5">
                       {isExpired ? (
@@ -268,7 +292,7 @@ export default function AdminAnnouncementsPage() {
         </div>
       )}
 
-      {/* Modal Popup (With Proper Screen Padding & Scroll) */}
+      {/* Modal Popup */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 md:p-6 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg my-auto overflow-hidden max-h-[90vh] flex flex-col">
@@ -349,8 +373,8 @@ export default function AdminAnnouncementsPage() {
                 />
               </div>
 
-              {/* Category & Event Date */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Category & Event Date-Time */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
                     Tag / Category
@@ -369,11 +393,11 @@ export default function AdminAnnouncementsPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
-                    Last Display Date
+                    Last Display Date & Time
                   </label>
                   <input
                     required
-                    type="date"
+                    type="datetime-local"
                     className="w-full px-4 py-2.5 border rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-none text-slate-800"
                     value={eventDate}
                     onChange={(e) => setEventDate(e.target.value)}
