@@ -11,15 +11,14 @@ export default function AnnouncementSection() {
 
   useEffect(() => {
     async function fetchActiveAnnouncements() {
-      // Local date string in YYYY-MM-DD format
-      const today = new Date();
-      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      // Current ISO timestamp string to filter out past/expired date and time
+      const nowIso = new Date().toISOString();
 
-      // Automatically filters out past/expired events
+      // Automatically filters out expired events based on exact date & time
       const { data, error } = await supabase
         .from("announcements")
         .select("*")
-        .gte("event_date", todayStr)
+        .gte("event_date", nowIso)
         .order("event_date", { ascending: true });
 
       if (!error && data) {
@@ -36,11 +35,31 @@ export default function AnnouncementSection() {
   return (
     <section className="bg-amber-500/10 border-b border-amber-200 py-8">
       <div className="max-w-4xl mx-auto px-4 space-y-6">
+        
+        {/* Single Top Moving Banner */}
+        <div className="w-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 font-black text-base md:text-lg py-3 rounded-2xl shadow-md overflow-hidden border border-amber-400 tracking-widest">
+          <div className="animate-marquee whitespace-nowrap">
+            <span className="mx-8 flex items-center gap-4">
+              <span>📢</span> A N N O U N C E M E N T <span>📢</span>
+            </span>
+            <span className="mx-8 flex items-center gap-4">
+              <span>📢</span> A N N O U N C E M E N T <span>📢</span>
+            </span>
+            <span className="mx-8 flex items-center gap-4">
+              <span>📢</span> A N N O U N C E M E N T <span>📢</span>
+            </span>
+            <span className="mx-8 flex items-center gap-4">
+              <span>📢</span> A N N O U N C E M E N T <span>📢</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Announcement Cards List */}
         {announcements.map((item) => (
           <Link
             key={item.id}
             href={`/announcements/${item.id}`}
-            className="group block bg-white rounded-3xl p-4 md:p-6 border border-amber-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+            className="group block bg-white rounded-3xl p-4 md:p-6 border border-amber-200/80 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
           >
             {/* Centered Picture Container */}
             <div className="w-full max-w-2xl mx-auto flex items-center justify-center overflow-hidden rounded-2xl bg-amber-50">
@@ -61,6 +80,7 @@ export default function AnnouncementSection() {
             </div>
           </Link>
         ))}
+
       </div>
     </section>
   );

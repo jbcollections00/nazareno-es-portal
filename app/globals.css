@@ -29,3 +29,23 @@ img {
   max-width: 100%;
   height: auto;
 }
+
+/* Moving Announcement Banner Animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: 200%;
+  animation: marquee 14s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
