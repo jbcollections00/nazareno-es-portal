@@ -2,6 +2,10 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { FaImages } from "react-icons/fa";
 
+// Pinipilit ang Next.js na kumuha ng live data sa bawat pagbisita (no caching)
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function GalleryPage() {
   const { data: albums } = await supabase
     .from("albums")
